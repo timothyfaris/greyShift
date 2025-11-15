@@ -273,16 +273,16 @@ def analyze_image():
         # Check if file was uploaded
         if 'file' not in request.files:
             logger.warning(f"Analysis attempt without file - IP: {client_ip}")
-            return jsonify({'error': 'No file selected'}), 400
+            return jsonify({'success': False, 'error': 'No file selected'}), 400
         
         file = request.files['file']
         if file.filename == '':
             logger.warning(f"Analysis attempt with empty filename - IP: {client_ip}")
-            return jsonify({'error': 'No file selected'}), 400
+            return jsonify({'success': False, 'error': 'No file selected'}), 400
         
         if not allowed_file(file.filename):
             logger.warning(f"Invalid file type for analysis: {file.filename} - IP: {client_ip}")
-            return jsonify({'error': 'Invalid file type'}), 400
+            return jsonify({'success': False, 'error': 'Invalid file type'}), 400
         
         logger.info(f"Image analysis started - File: {file.filename} - IP: {client_ip}")
         
@@ -307,16 +307,19 @@ def analyze_image():
                 'success': True
             }
             
-            return jsonify(result)
+            return jsonify(result), 200
             
         finally:
             # Clean up temporary file
-            if os.path.exists(temp_path):
-                os.remove(temp_path)
+            try:
+                if os.path.exists(temp_path):
+                    os.remove(temp_path)
+            except Exception as cleanup_error:
+                logger.warning(f"Failed to cleanup temp file: {cleanup_error}")
                 
     except Exception as e:
         logger.error(f"Analysis failed - File: {file.filename if 'file' in locals() else 'Unknown'}, Error: {str(e)} - IP: {client_ip}")
-        return jsonify({'error': f'Analysis failed: {str(e)}'}), 500
+        return jsonify({'success': False, 'error': f'Analysis failed: {str(e)}'}), 500
 
 
 @app.route('/health')

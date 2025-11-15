@@ -502,7 +502,15 @@
                     method: 'POST',
                     body: formData
                 })
-                .then(response => response.json())
+                .then(response => {
+                    // Check if response is JSON before parsing
+                    const contentType = response.headers.get('content-type');
+                    if (!contentType || !contentType.includes('application/json')) {
+                        console.warn('Analysis returned non-JSON response, using fallback preview');
+                        throw new TypeError('Response is not JSON');
+                    }
+                    return response.json();
+                })
                 .then(data => {
                     if (data.success) {
                         correctionOffsets = {
@@ -521,7 +529,7 @@
                     }
                 })
                 .catch(error => {
-                    console.error('Analysis error:', error);
+                    console.warn('Analysis unavailable, using simplified preview:', error.message);
                     // Fall back to simplified preview if network error
                     correctionOffsets = null;
                     updateLivePreview(parseFloat(scalarRange.value));
@@ -599,7 +607,14 @@
                     method: 'POST',
                     body: formData
                 })
-                .then(response => response.json())
+                .then(response => {
+                    // Check if response is JSON before parsing
+                    const contentType = response.headers.get('content-type');
+                    if (!contentType || !contentType.includes('application/json')) {
+                        throw new TypeError('Server returned non-JSON response. Please check server logs.');
+                    }
+                    return response.json();
+                })
                 .then(data => {
                     loadingOverlay.style.display = 'none';
                     
@@ -663,7 +678,14 @@
                     method: 'POST',
                     body: formData
                 })
-                .then(response => response.json())
+                .then(response => {
+                    // Check if response is JSON before parsing
+                    const contentType = response.headers.get('content-type');
+                    if (!contentType || !contentType.includes('application/json')) {
+                        throw new TypeError('Server returned non-JSON response. Please check server logs.');
+                    }
+                    return response.json();
+                })
                 .then(data => {
                     loadingOverlay.style.display = 'none';
                     
