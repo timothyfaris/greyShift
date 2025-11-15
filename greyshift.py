@@ -239,56 +239,55 @@ class GreyShift:
         print(f"Max dimension for analysis: {max_dimension}px")
         print(f"Scalar: {self.scalar}")
         
-        # Load original image
-        original_img = Image.open(self.filepath)
-        if original_img.mode != 'RGB':
-            original_img = original_img.convert('RGB')
-        
-        original_width, original_height = original_img.size
-        print(f"Original image: {original_width}x{original_height} pixels")
+        # First, check original dimensions without loading full image
+        with Image.open(self.filepath) as img_check:
+            original_width, original_height = img_check.size
+            print(f"Original image: {original_width}x{original_height} pixels")
         
         # Check if resizing is needed for analysis
         max_original_dimension = max(original_width, original_height)
         
         if max_original_dimension > max_dimension:
-            # Calculate resize dimensions for analysis
+            # STEP 1: Analyze resized version (memory-efficient)
             scale_factor = max_dimension / max_original_dimension
             analysis_width = int(original_width * scale_factor)
             analysis_height = int(original_height * scale_factor)
             
-            print(f"Resizing for analysis: {analysis_width}x{analysis_height} pixels")
+            print(f"Resizing for analysis: {analysis_width}x{analysis_height}")
             
-            # Create resized version for analysis
-            analysis_img = original_img.resize((analysis_width, analysis_height), Image.Resampling.LANCZOS)
-            
-            # Save temporarily for analysis
-            temp_analysis_path = self.filepath + ".temp_analysis.jpg"
-            analysis_img.save(temp_analysis_path, quality=95)
+            # Load and resize for analysis only
+            with Image.open(self.filepath) as original_img:
+                if original_img.mode != 'RGB':
+                    original_img = original_img.convert('RGB')
+                analysis_img = original_img.resize(
+                    (analysis_width, analysis_height), 
+                    Image.Resampling.LANCZOS
+                )
             
             # Analyze the resized version
             self.img = analysis_img
             self.analyze_tonal_ranges()
             
-            # Clean up temporary file
-            try:
-                os.remove(temp_analysis_path)
-            except:
-                pass
+            # Free memory
+            del analysis_img
+            del self.img
             
-            # Now apply correction to the ORIGINAL full-resolution image
-            print(f"Applying correction to original {original_width}x{original_height} image...")
-            self.img = original_img
-            self.corrected_img = original_img  # Keep reference to original
+            # STEP 2: Apply correction to original (load fresh)
+            print(f"Applying correction to original {original_width}x{original_height}")
+            with Image.open(self.filepath) as original_img:
+                if original_img.mode != 'RGB':
+                    original_img = original_img.convert('RGB')
+                self.img = original_img
+                self.apply_correction()
+                output_path = self.save_image()
             
         else:
             # Image is small enough, process normally
             print("Image within size limit, processing at full resolution")
-            self.img = original_img
+            self.load_and_resize_image()
             self.analyze_tonal_ranges()
-        
-        # Apply correction to full-resolution image
-        self.apply_correction()
-        output_path = self.save_image()
+            self.apply_correction()
+            output_path = self.save_image()
         
         print("Processing complete!")
         return output_path
