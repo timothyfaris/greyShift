@@ -87,6 +87,11 @@ node_modules/
 tmp/
 temp/
 
+# Application runtime folders
+uploads/
+processed/
+display/
+
 # Editor directories and files
 .history/
 *.tmp
