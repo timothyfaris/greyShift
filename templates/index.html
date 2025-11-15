@@ -702,7 +702,11 @@
                     // Check if response is JSON before parsing
                     const contentType = response.headers.get('content-type');
                     if (!contentType || !contentType.includes('application/json')) {
-                        throw new TypeError('Server returned non-JSON response. Please check server logs.');
+                        // Log the actual response for debugging
+                        return response.text().then(text => {
+                            console.error('Non-JSON response received:', text.substring(0, 500));
+                            throw new TypeError('Server error - check server logs. Response: ' + text.substring(0, 100));
+                        });
                     }
                     return response.json();
                 })
@@ -717,6 +721,7 @@
                 })
                 .catch(error => {
                     loadingOverlay.style.display = 'none';
+                    console.error('Auto-processing error details:', error);
                     showError('Auto-processing error: ' + error.message);
                 });
             }
