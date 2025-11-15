@@ -493,7 +493,8 @@
             }
             
             function analyzeImageForPreview(file) {
-                // Send image to server for analysis to get actual correction offsets
+                // Send the ORIGINAL full-resolution image to server for analysis
+                // This ensures preview and processed image use the SAME correction offsets
                 const formData = new FormData();
                 formData.append('file', file);
                 
@@ -510,7 +511,7 @@
                             blue: data.blue_avg_offset
                         };
                         
-                        // Update preview with actual offsets
+                        // Update preview with actual offsets from full-res analysis
                         updateLivePreview(parseFloat(scalarRange.value));
                     } else {
                         console.error('Analysis failed:', data.error);

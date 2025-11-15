@@ -199,7 +199,8 @@ def upload_file():
             'scalar': scalar,
             'download_url': url_for('download_file_with_original_name',
                                   processed_filename=processed_filename,
-                                  original_filename=filename)
+                                  original_filename=filename,
+                                  scalar=scalar)
         }
         
         return jsonify(result)
@@ -227,7 +228,7 @@ def serve_file(folder, filename):
 
 @app.route('/download/<processed_filename>/<original_filename>')
 def download_file_with_original_name(processed_filename, original_filename):
-    """Download processed file with original filename + _greyshift."""
+    """Download processed file with original filename + _greyshift_scalar()."""
     client_ip = request.environ.get('HTTP_X_FORWARDED_FOR', request.remote_addr)
     
     file_path = os.path.join(PROCESSED_FOLDER, processed_filename)
@@ -235,12 +236,15 @@ def download_file_with_original_name(processed_filename, original_filename):
         logger.warning(f"Download attempt for missing file: {processed_filename} - IP: {client_ip}")
         return "File not found", 404
     
-    # Create the new filename: original name + _greyshift + extension
+    # Get scalar value from query parameters
+    scalar = request.args.get('scalar', '1.0')
+    
+    # Create the new filename: original name + _greyshift_scalar(value) + extension
     name_parts = original_filename.rsplit('.', 1)
     if len(name_parts) == 2:
-        new_filename = f"{name_parts[0]}_greyshift.{name_parts[1]}"
+        new_filename = f"{name_parts[0]}_greyshift_scalar({scalar}).{name_parts[1]}"
     else:
-        new_filename = f"{original_filename}_greyshift"
+        new_filename = f"{original_filename}_greyshift_scalar({scalar})"
     
     logger.info(f"File downloaded: {processed_filename} as {new_filename} - IP: {client_ip}")
     return send_file(file_path, as_attachment=True, download_name=new_filename)
@@ -295,11 +299,11 @@ def analyze_image():
             
             logger.info(f"Image analysis completed - File: {file.filename}, Offsets: R:{processor.red_avg_offset:.2f}, G:{processor.green_avg_offset:.2f}, B:{processor.blue_avg_offset:.2f} - IP: {client_ip}")
             
-            # Return the calculated offsets
+            # Return the calculated offsets (convert numpy types to Python floats for JSON)
             result = {
-                'red_avg_offset': processor.red_avg_offset,
-                'green_avg_offset': processor.green_avg_offset,
-                'blue_avg_offset': processor.blue_avg_offset,
+                'red_avg_offset': float(processor.red_avg_offset),
+                'green_avg_offset': float(processor.green_avg_offset),
+                'blue_avg_offset': float(processor.blue_avg_offset),
                 'success': True
             }
             
