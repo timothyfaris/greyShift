@@ -225,6 +225,73 @@ class GreyShift:
         
         print("Processing complete!")
         return output_path
+    
+    def process_with_memory_optimization(self, max_dimension=3280):
+        """Process with memory optimization: analyze resized, apply to original.
+        
+        Args:
+            max_dimension (int): Maximum dimension for analysis (default 3280px)
+        
+        Returns:
+            str: Path to the processed full-resolution image
+        """
+        print(f"Processing image with memory optimization: {self.filepath}")
+        print(f"Max dimension for analysis: {max_dimension}px")
+        print(f"Scalar: {self.scalar}")
+        
+        # Load original image
+        original_img = Image.open(self.filepath)
+        if original_img.mode != 'RGB':
+            original_img = original_img.convert('RGB')
+        
+        original_width, original_height = original_img.size
+        print(f"Original image: {original_width}x{original_height} pixels")
+        
+        # Check if resizing is needed for analysis
+        max_original_dimension = max(original_width, original_height)
+        
+        if max_original_dimension > max_dimension:
+            # Calculate resize dimensions for analysis
+            scale_factor = max_dimension / max_original_dimension
+            analysis_width = int(original_width * scale_factor)
+            analysis_height = int(original_height * scale_factor)
+            
+            print(f"Resizing for analysis: {analysis_width}x{analysis_height} pixels")
+            
+            # Create resized version for analysis
+            analysis_img = original_img.resize((analysis_width, analysis_height), Image.Resampling.LANCZOS)
+            
+            # Save temporarily for analysis
+            temp_analysis_path = self.filepath + ".temp_analysis.jpg"
+            analysis_img.save(temp_analysis_path, quality=95)
+            
+            # Analyze the resized version
+            self.img = analysis_img
+            self.analyze_tonal_ranges()
+            
+            # Clean up temporary file
+            try:
+                os.remove(temp_analysis_path)
+            except:
+                pass
+            
+            # Now apply correction to the ORIGINAL full-resolution image
+            print(f"Applying correction to original {original_width}x{original_height} image...")
+            self.img = original_img
+            self.corrected_img = original_img  # Keep reference to original
+            
+        else:
+            # Image is small enough, process normally
+            print("Image within size limit, processing at full resolution")
+            self.img = original_img
+            self.analyze_tonal_ranges()
+        
+        # Apply correction to full-resolution image
+        self.apply_correction()
+        output_path = self.save_image()
+        
+        print("Processing complete!")
+        return output_path
 
 
 def main():

@@ -175,15 +175,15 @@ def upload_file():
                 scalar=scalar
             )
             
-            logger.info(f"GreyShift processor initialized, calling process()...")
-            # Process and get the output path
-            output_path = processor.process()
+            logger.info(f"GreyShift processor initialized, calling process_with_memory_optimization()...")
+            # Process with memory optimization (resize for analysis, apply to original)
+            output_path = processor.process_with_memory_optimization(max_dimension=3280)
             processing_time = (datetime.datetime.now() - start_time).total_seconds()
             
             logger.info(f"Processing completed in {processing_time:.2f}s, output: {output_path}")
             
         except Exception as proc_error:
-            logger.error(f"Processing failed during GreyShift.process(): {str(proc_error)}")
+            logger.error(f"Processing failed during GreyShift.process_with_memory_optimization(): {str(proc_error)}")
             raise
         
         # Move processed file to processed folder
@@ -316,9 +316,26 @@ def analyze_image():
         file.save(temp_path)
         
         try:
-            # Analyze the image to get correction offsets
+            # Analyze the image to get correction offsets (resize if needed for memory)
             processor = GreyShift(filepath=temp_path, scalar=1.0)
-            processor.load_and_resize_image()
+            
+            # Load and check size
+            original_img = Image.open(temp_path)
+            if original_img.mode != 'RGB':
+                original_img = original_img.convert('RGB')
+            
+            original_width, original_height = original_img.size
+            max_dimension = max(original_width, original_height)
+            
+            if max_dimension > 3280:
+                # Resize for analysis
+                scale_factor = 3280 / max_dimension
+                analysis_width = int(original_width * scale_factor)
+                analysis_height = int(original_height * scale_factor)
+                processor.img = original_img.resize((analysis_width, analysis_height), Image.Resampling.LANCZOS)
+            else:
+                processor.img = original_img
+            
             processor.analyze_tonal_ranges()
             
             logger.info(f"Image analysis completed - File: {file.filename}, Offsets: R:{processor.red_avg_offset:.2f}, G:{processor.green_avg_offset:.2f}, B:{processor.blue_avg_offset:.2f} - IP: {client_ip}")
