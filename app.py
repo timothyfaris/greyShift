@@ -163,6 +163,8 @@ def upload_file():
         display_path = os.path.join(DISPLAY_FOLDER, display_filename)
         was_resized = create_display_thumbnail(upload_path, display_path)
         
+        logger.info(f"Created display thumbnail: {display_path}, exists: {os.path.exists(display_path)}")
+        
         # Process the image
         start_time = datetime.datetime.now()
         processor = GreyShift(
@@ -179,6 +181,8 @@ def upload_file():
         processed_path = os.path.join(PROCESSED_FOLDER, processed_filename)
         shutil.move(output_path, processed_path)
         
+        logger.info(f"Processed file moved to: {processed_path}, exists: {os.path.exists(processed_path)}")
+        
         # Get image info
         original_img = Image.open(upload_path)
         processed_img = Image.open(processed_path)
@@ -190,17 +194,27 @@ def upload_file():
         processed_display_path = os.path.join(DISPLAY_FOLDER, processed_display_filename)
         create_display_thumbnail(processed_path, processed_display_path)
         
+        logger.info(f"Created processed display thumbnail: {processed_display_path}, exists: {os.path.exists(processed_display_path)}")
+        
+        # Generate absolute URLs for better compatibility
+        original_url = url_for('serve_file', folder='display', filename=display_filename, _external=False)
+        processed_url = url_for('serve_file', folder='display', filename=processed_display_filename, _external=False)
+        download_url = url_for('download_file_with_original_name',
+                              processed_filename=processed_filename,
+                              original_filename=filename,
+                              scalar=scalar,
+                              _external=False)
+        
+        logger.info(f"Generated URLs - Original: {original_url}, Processed: {processed_url}, Download: {download_url}")
+        
         result = {
             'success': True,
-            'original_url': url_for('serve_file', folder='display', filename=display_filename),
-            'processed_url': url_for('serve_file', folder='display', filename=processed_display_filename),
+            'original_url': original_url,
+            'processed_url': processed_url,
             'original_size': f"{original_img.size[0]}×{original_img.size[1]}",
             'processed_size': f"{processed_img.size[0]}×{processed_img.size[1]}",
             'scalar': scalar,
-            'download_url': url_for('download_file_with_original_name',
-                                  processed_filename=processed_filename,
-                                  original_filename=filename,
-                                  scalar=scalar)
+            'download_url': download_url
         }
         
         return jsonify(result)

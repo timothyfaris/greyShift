@@ -631,8 +631,26 @@
             });
 
             function showResults(data) {
-                document.getElementById('originalImage').src = data.original_url;
-                document.getElementById('processedImage').src = data.processed_url;
+                console.log('Showing results with data:', data);
+                
+                const originalImg = document.getElementById('originalImage');
+                const processedImg = document.getElementById('processedImage');
+                const downloadBtn = document.getElementById('downloadBtn');
+                
+                // Set image sources
+                originalImg.src = data.original_url;
+                processedImg.src = data.processed_url;
+                
+                // Add error handling for images
+                originalImg.onerror = function() {
+                    console.error('Failed to load original image:', data.original_url);
+                    showError('Failed to load original image preview');
+                };
+                processedImg.onerror = function() {
+                    console.error('Failed to load processed image:', data.processed_url);
+                    showError('Failed to load processed image preview');
+                };
+                
                 document.getElementById('originalInfo').innerHTML = `
                     Size: ${data.original_size}
                 `;
@@ -640,7 +658,9 @@
                     Size: ${data.processed_size}<br>
                     Scalar: ${data.scalar}
                 `;
-                document.getElementById('downloadBtn').href = data.download_url;
+                downloadBtn.href = data.download_url;
+                
+                console.log('Download URL set to:', data.download_url);
                 
                 resultsSection.style.display = 'block';
                 resultsSection.scrollIntoView({ behavior: 'smooth' });
