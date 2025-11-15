@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: greyshift
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn --bind 0.0.0.0:5000 --timeout 120 --graceful-timeout 30 --workers 2 app:app
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.13.0
+    healthCheckPath: /health
