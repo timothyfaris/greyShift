@@ -166,15 +166,25 @@ def upload_file():
         logger.info(f"Created display thumbnail: {display_path}, exists: {os.path.exists(display_path)}")
         
         # Process the image
+        logger.info(f"Starting image processing with GreyShift...")
         start_time = datetime.datetime.now()
-        processor = GreyShift(
-            filepath=upload_path,
-            scalar=scalar
-        )
         
-        # Process and get the output path
-        output_path = processor.process()
-        processing_time = (datetime.datetime.now() - start_time).total_seconds()
+        try:
+            processor = GreyShift(
+                filepath=upload_path,
+                scalar=scalar
+            )
+            
+            logger.info(f"GreyShift processor initialized, calling process()...")
+            # Process and get the output path
+            output_path = processor.process()
+            processing_time = (datetime.datetime.now() - start_time).total_seconds()
+            
+            logger.info(f"Processing completed in {processing_time:.2f}s, output: {output_path}")
+            
+        except Exception as proc_error:
+            logger.error(f"Processing failed during GreyShift.process(): {str(proc_error)}")
+            raise
         
         # Move processed file to processed folder
         processed_filename = f"{unique_id}_processed.{file_ext}"
