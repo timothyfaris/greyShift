@@ -92,6 +92,9 @@ uploads/
 processed/
 display/
 
+# Design assets (local only)
+assets/
+
 # Editor directories and files
 .history/
 *.tmp
