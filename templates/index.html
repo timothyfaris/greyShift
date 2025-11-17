@@ -149,8 +149,8 @@
     <!-- Navigation -->
     <nav class="navbar navbar-dark bg-dark">
         <div class="container">
-            <a class="navbar-brand" href="#">
-                <img src="{{ url_for('static', filename='greyShift_favicon.png') }}" alt="greyShift" height="30" class="d-inline-block align-text-top me-2">
+            <a class="navbar-brand d-flex align-items-center" href="#">
+                <img src="{{ url_for('static', filename='greyShift_favicon.png') }}" alt="greyShift" height="30" class="me-1">
                 greyShift
             </a>
             <span class="navbar-text">
@@ -179,7 +179,7 @@
                                 <div class="drag-drop-area" id="dragDropArea">
                                     <i class="fas fa-cloud-upload-alt fa-3x text-muted mb-3"></i>
                                     <p class="mb-2">Drag & drop your image here, or click to select</p>
-                                    <p class="text-muted small">Supports: JPG, PNG, TIFF, BMP, WebP (3280px max on longest side)</p>
+                                    <p class="text-muted small">Supports common image formats (currently optimized for web-sized images)</p>
                                     <input type="file" id="fileInput" name="file" accept="image/*" class="d-none">
                                 </div>
                                 <div id="fileInfo" class="mt-2 text-muted small" style="display: none;"></div>
