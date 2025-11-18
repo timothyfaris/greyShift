@@ -153,9 +153,9 @@
                 <img src="{{ url_for('static', filename='greyShift_favicon.png') }}" alt="greyShift" height="30" class="me-1">
                 greyShift
             </a>
-            <span class="navbar-text">
+            <!-- <span class="navbar-text">
                 Automated Color Balance
-            </span>
+            </span> -->
         </div>
     </nav>
 
@@ -234,7 +234,7 @@
                             </h3>
                         </div>
                         <div class="card-body">
-                            <div class="row">
+                            <!-- <div class="row">
                                 <div class="col-md-6 mb-3">
                                     <h5>Original</h5>
                                     <div class="image-container">
@@ -249,8 +249,12 @@
                                     </div>
                                     <div class="mt-2 small text-muted" id="processedInfo"></div>
                                 </div>
-                            </div>
+                            </div> -->
                             <div class="text-center mt-3">
+                                <div class="mb-2">
+                                    <span class="text-muted">Correction Intensity Applied: </span>
+                                    <span id="downloadScalarValue" class="badge bg-success fs-6">0.00</span>
+                                </div>
                                 <a href="#" id="downloadBtn" class="btn btn-success btn-lg" download>
                                     <i class="fas fa-download me-2"></i>
                                     Download Corrected Image
@@ -634,32 +638,14 @@
             function showResults(data) {
                 console.log('Showing results with data:', data);
                 
-                const originalImg = document.getElementById('originalImage');
-                const processedImg = document.getElementById('processedImage');
                 const downloadBtn = document.getElementById('downloadBtn');
+                const downloadScalarValue = document.getElementById('downloadScalarValue');
                 
-                // Set image sources
-                originalImg.src = data.original_url;
-                processedImg.src = data.processed_url;
-                
-                // Add error handling for images
-                originalImg.onerror = function() {
-                    console.error('Failed to load original image:', data.original_url);
-                    showError('Failed to load original image preview');
-                };
-                processedImg.onerror = function() {
-                    console.error('Failed to load processed image:', data.processed_url);
-                    showError('Failed to load processed image preview');
-                };
-                
-                document.getElementById('originalInfo').innerHTML = `
-                    Size: ${data.original_size}
-                `;
-                document.getElementById('processedInfo').innerHTML = `
-                    Size: ${data.processed_size}<br>
-                    Scalar: ${data.scalar}
-                `;
+                // Set download link
                 downloadBtn.href = data.download_url;
+                
+                // Update scalar verification display
+                downloadScalarValue.textContent = parseFloat(data.scalar).toFixed(2);
                 
                 console.log('Download URL set to:', data.download_url);
                 
